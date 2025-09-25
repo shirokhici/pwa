@@ -66,6 +66,17 @@ export default function InstallButton() {
     }
   }, [isInstalling]);
 
+  // Complete installation when progress reaches 100%
+  useEffect(() => {
+    if (isInstalling && installProgress >= 100) {
+      // Small delay to show 100% before completing
+      const timer = setTimeout(() => {
+        completeInstallation();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isInstalling, installProgress, completeInstallation]);
+
   // Show confetti when installation completes
   useEffect(() => {
     if (isInstalled && !showConfetti) {
@@ -79,20 +90,17 @@ export default function InstallButton() {
   }, [isInstalled, showConfetti]);
 
   const handleInstallClick = async () => {
-    if (!canInstall || !deferredPrompt) return;
-
-    try {
-      // Show the install prompt first
-      const result = await deferredPrompt.prompt();
-      
-      if (result.outcome === 'accepted') {
-        // User accepted, start installation process
-        startInstallation();
+    // Always start installation process for demo/testing
+    startInstallation();
+    
+    // If browser supports PWA installation, also show the native prompt
+    if (canInstall && deferredPrompt) {
+      try {
+        const result = await deferredPrompt.prompt();
+        console.log('Native install prompt result:', result.outcome);
+      } catch (error) {
+        console.error('Native installation prompt failed:', error);
       }
-      // If dismissed, do nothing - stay on current page
-    } catch (error) {
-      console.error('Installation failed:', error);
-      // On error, stay on current page
     }
   };
 
