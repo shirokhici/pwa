@@ -12,6 +12,7 @@ export default function InstallButton() {
     canInstall, 
     deferredPrompt, 
     startInstallation,
+    completeInstallation,
     installDate 
   } = useInstall();
 
