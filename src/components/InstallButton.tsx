@@ -31,22 +31,24 @@ export default function InstallButton() {
     'Menyelesaikan'
   ];
 
-  // Simulate installation progress
+  // Simulate installation progress (10 seconds total)
   useEffect(() => {
     if (isInstalling) {
       setInstallProgress(0);
       setCurrentStep(1);
       
+      // Progress bar: 100% in 10 seconds = 1% every 100ms
       const progressInterval = setInterval(() => {
         setInstallProgress(prev => {
           if (prev >= 100) {
             clearInterval(progressInterval);
             return 100;
           }
-          return prev + 2;
+          return prev + 1;
         });
       }, 100);
 
+      // Steps: 4 steps in 10 seconds = every 2.5 seconds
       const stepInterval = setInterval(() => {
         setCurrentStep(prev => {
           if (prev >= installSteps.length) {
@@ -55,7 +57,7 @@ export default function InstallButton() {
           }
           return prev + 1;
         });
-      }, 1500);
+      }, 2500);
 
       return () => {
         clearInterval(progressInterval);
@@ -140,34 +142,58 @@ export default function InstallButton() {
     });
   };
 
-  // Installing state with progress bar
+  // Installing state with enhanced progress bar and animations
   if (isInstalling) {
     return (
-      <div className="w-full space-y-4 p-6 bg-blue-50 rounded-xl border border-blue-200">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="w-full space-y-4">
+        {/* Enhanced loading header with pulse animation */}
+        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 text-center animate-success-pulse">
+          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center shadow-lg">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600"></div>
           </div>
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+          <h3 className="text-xl font-bold text-blue-900 mb-2">
             Menginstal Aplikasi
           </h3>
-          <p className="text-sm text-blue-700 mb-4">
+          <p className="text-sm text-blue-700 mb-2">
             Mohon tunggu, aplikasi sedang diinstal...
+          </p>
+          <p className="text-xs text-blue-600 font-medium">
+            {installSteps[currentStep - 1]} • {installProgress}%
           </p>
         </div>
         
-        <SteppedProgressBar 
-          currentStep={currentStep}
-          totalSteps={installSteps.length}
-          steps={installSteps}
-          className="mb-4"
-        />
+        {/* Enhanced stepped progress bar */}
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <SteppedProgressBar 
+            currentStep={currentStep}
+            totalSteps={installSteps.length}
+            steps={installSteps}
+            className="mb-4"
+          />
+        </div>
         
-        <ProgressBar 
-          progress={installProgress}
-          isAnimating={true}
-          showPercentage={true}
-        />
+        {/* Enhanced main progress bar with shimmer effect */}
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700">Progress Instalasi</span>
+            <span className="text-sm font-bold text-blue-600">{installProgress}%</span>
+          </div>
+          <ProgressBar 
+            progress={installProgress}
+            isAnimating={true}
+            showPercentage={false}
+          />
+          
+          {/* Animated install button (disabled state) */}
+          <button
+            disabled={true}
+            className="w-full mt-4 min-h-[60px] px-6 py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-blue-400 to-blue-500 text-white cursor-not-allowed flex items-center justify-center space-x-3 relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+            <span>Menginstal... {installProgress}%</span>
+          </button>
+        </div>
       </div>
     );
   }

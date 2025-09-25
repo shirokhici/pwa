@@ -12,7 +12,7 @@ export class PWALauncher {
   private startUrl: string;
 
   constructor() {
-    this.startUrl = typeof window !== 'undefined' ? window.location.origin + '/' : '/';
+    this.startUrl = 'https://www.pwawiki.com';
   }
 
   public static getInstance(): PWALauncher {
