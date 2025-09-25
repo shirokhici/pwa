@@ -11,9 +11,11 @@ export default function InstalledPage() {
     // Show confetti animation
     setShowConfetti(true);
     
-    // Store installation status
-    localStorage.setItem('pwa_installed', 'true');
-    localStorage.setItem('pwa_install_date', new Date().toISOString());
+    // Store installation status (client-side only)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pwa_installed', 'true');
+      localStorage.setItem('pwa_install_date', new Date().toISOString());
+    }
   }, []);
 
   const handleOpenApp = () => {

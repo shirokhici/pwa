@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
+  // App directory is now stable in Next.js 13.4+
+  // experimental: { appDir: true } is no longer needed
   async headers() {
     return [
       {

@@ -2,6 +2,16 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
+// Define BeforeInstallPromptEvent interface for TypeScript
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 interface InstallContextType {
   isInstalled: boolean;
   isInstalling: boolean;
@@ -32,7 +42,7 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
   const [isInstalling, setIsInstalling] = useState(false);
   const [installDate, setInstallDate] = useState<string | null>(null);
   const [canInstall, setCanInstall] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   const checkInstallationStatus = () => {
     if (typeof window !== 'undefined') {
@@ -89,7 +99,7 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
     checkInstallationStatus();
 
     // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setCanInstall(true);
@@ -108,17 +118,27 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
     };
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
       window.addEventListener('appinstalled', handleAppInstalled);
       
       // Listen for display mode changes
       const mediaQuery = window.matchMedia('(display-mode: standalone)');
-      mediaQuery.addListener(handleDisplayModeChange);
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleDisplayModeChange);
+      } else {
+        // Fallback for older browsers
+        mediaQuery.addListener(handleDisplayModeChange);
+      }
 
       return () => {
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
         window.removeEventListener('appinstalled', handleAppInstalled);
-        mediaQuery.removeListener(handleDisplayModeChange);
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener('change', handleDisplayModeChange);
+        } else {
+          // Fallback for older browsers
+          mediaQuery.removeListener(handleDisplayModeChange);
+        }
       };
     }
   }, []);
