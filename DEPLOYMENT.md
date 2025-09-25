@@ -1,12 +1,31 @@
 # 🚀 Deployment Guide - Vercel
 
-Panduan lengkap untuk deploy PWA Installation Page ke Vercel.
+Panduan lengkap untuk deploy PWA Installation Page ke Vercel dengan TypeScript support dan PWA capabilities.
 
 ## 📋 Prerequisites
 
 1. **Akun Vercel** - Daftar di [vercel.com](https://vercel.com)
 2. **Git Repository** - Push code ke GitHub/GitLab/Bitbucket
 3. **Node.js** terinstall di local (untuk testing)
+
+## ✅ Vercel Deployment Fixes Applied
+
+### TypeScript Compatibility
+- ✅ Fixed `BeforeInstallPromptEvent` interface with proper return types
+- ✅ Updated `prompt()` method to return `Promise<{outcome: 'accepted' | 'dismissed'; platform: string}>`
+- ✅ Added proper type casting for event listeners
+- ✅ Fixed SSR compatibility with `localStorage` checks
+
+### Next.js Configuration
+- ✅ Removed deprecated `experimental.appDir` flag
+- ✅ Removed deprecated `export` script from package.json
+- ✅ Configured `output: 'standalone'` for Vercel optimization
+- ✅ Added proper headers for PWA files in `next.config.js`
+
+### Build Optimization
+- ✅ All components use `'use client'` directive properly
+- ✅ Path aliases configured correctly (`@/*` → `./src/*`)
+- ✅ Service Worker and Manifest.json properly configured
 
 ## 🔧 Persiapan Deployment
 

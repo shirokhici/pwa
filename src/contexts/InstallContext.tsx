@@ -9,7 +9,10 @@ interface BeforeInstallPromptEvent extends Event {
     outcome: 'accepted' | 'dismissed';
     platform: string;
   }>;
-  prompt(): Promise<void>;
+  prompt(): Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
 }
 
 interface InstallContextType {
