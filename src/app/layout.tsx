@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { InstallProvider } from '@/contexts/InstallContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'My Awesome PWA',
+  title: 'PWA Installation App',
   description: 'A Progressive Web App with Google Play Store-like installation experience',
   manifest: '/manifest.json',
   themeColor: '#1a73e8',
@@ -13,11 +14,16 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'My Awesome PWA',
+    title: 'PWA Installation App',
   },
   icons: {
-    icon: '/icons/icon-192x192.svg',
-    apple: '/icons/icon-192x192.svg',
+    icon: [
+      { url: '/icons/icon-192x192.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icons/icon-512x512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/icons/icon-192x192.svg', sizes: '192x192', type: 'image/svg+xml' },
+    ],
   },
 }
 
@@ -27,27 +33,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id">
+    <html lang="en">
       <head>
-        <meta name="application-name" content="My Awesome PWA" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1a73e8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        
+        {/* Apple Web App Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="My Awesome PWA" />
-        <meta name="description" content="A Progressive Web App with Google Play Store-like installation experience" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#1a73e8" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#1a73e8" />
+        <meta name="apple-mobile-web-app-title" content="PWA Installation App" />
         
+        {/* Icons */}
+        <link rel="icon" href="/icons/icon-192x192.svg" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
-        <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.svg" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="shortcut icon" href="/icons/icon-192x192.svg" />
-      </head>
-      <body className={inter.className}>
-        {children}
+        
+        {/* Service Worker Registration */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -65,6 +66,11 @@ export default function RootLayout({
             `,
           }}
         />
+      </head>
+      <body className={inter.className}>
+        <InstallProvider>
+          {children}
+        </InstallProvider>
       </body>
     </html>
   )
