@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useInstall } from '@/contexts/InstallContext';
 import { pwaLauncher, PWALaunchResult } from '@/utils/pwaLauncher';
 import ProgressBar, { SteppedProgressBar } from './ProgressBar';
@@ -13,6 +13,7 @@ export default function InstallButton() {
     deferredPrompt, 
     startInstallation,
     completeInstallation,
+    cancelInstallation,
     installDate 
   } = useInstall();
 
@@ -25,12 +26,36 @@ export default function InstallButton() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchStatus, setLaunchStatus] = useState<string>('');
 
+  // Refs to track intervals for cancellation
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const stepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const installSteps = [
     'Mempersiapkan',
     'Mengunduh',
     'Menginstal',
     'Menyelesaikan'
   ];
+
+  // Handle cancel installation
+  const handleCancel = () => {
+    // Clear intervals
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    if (stepIntervalRef.current) {
+      clearInterval(stepIntervalRef.current);
+      stepIntervalRef.current = null;
+    }
+    
+    // Reset progress states
+    setInstallProgress(0);
+    setCurrentStep(0);
+    
+    // Cancel installation in context
+    cancelInstallation();
+  };
 
   // Simulate installation progress (10 seconds total)
   useEffect(() => {
@@ -39,10 +64,13 @@ export default function InstallButton() {
       setCurrentStep(1);
       
       // Progress bar: 100% in 10 seconds = 1% every 100ms
-      const progressInterval = setInterval(() => {
+      progressIntervalRef.current = setInterval(() => {
         setInstallProgress(prev => {
           if (prev >= 100) {
-            clearInterval(progressInterval);
+            if (progressIntervalRef.current) {
+              clearInterval(progressIntervalRef.current);
+              progressIntervalRef.current = null;
+            }
             return 100;
           }
           return prev + 1;
@@ -50,10 +78,13 @@ export default function InstallButton() {
       }, 100);
 
       // Steps: 4 steps in 10 seconds = every 2.5 seconds
-      const stepInterval = setInterval(() => {
+      stepIntervalRef.current = setInterval(() => {
         setCurrentStep(prev => {
           if (prev >= installSteps.length) {
-            clearInterval(stepInterval);
+            if (stepIntervalRef.current) {
+              clearInterval(stepIntervalRef.current);
+              stepIntervalRef.current = null;
+            }
             return installSteps.length;
           }
           return prev + 1;
@@ -61,8 +92,14 @@ export default function InstallButton() {
       }, 2500);
 
       return () => {
-        clearInterval(progressInterval);
-        clearInterval(stepInterval);
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+        if (stepIntervalRef.current) {
+          clearInterval(stepIntervalRef.current);
+          stepIntervalRef.current = null;
+        }
       };
     }
   }, [isInstalling]);
@@ -193,14 +230,15 @@ export default function InstallButton() {
             showPercentage={false}
           />
           
-          {/* Animated install button (disabled state) */}
+          {/* Cancel button */}
           <button
-            disabled={true}
-            className="w-full mt-4 min-h-[60px] px-6 py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-blue-400 to-blue-500 text-white cursor-not-allowed flex items-center justify-center space-x-3 relative overflow-hidden"
+            onClick={handleCancel}
+            className="w-full mt-4 min-h-[60px] px-6 py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-3"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer"></div>
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-            <span>Menginstal... {installProgress}%</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Batalkan</span>
           </button>
         </div>
       </div>

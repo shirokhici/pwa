@@ -23,6 +23,7 @@ interface InstallContextType {
   deferredPrompt: BeforeInstallPromptEvent | null;
   startInstallation: () => void;
   completeInstallation: () => void;
+  cancelInstallation: () => void;
   resetInstallation: () => void;
 }
 
@@ -85,6 +86,11 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
       localStorage.setItem('pwa_installed', 'true');
       localStorage.setItem('pwa_install_date', now);
     }
+  };
+
+  const cancelInstallation = () => {
+    setIsInstalling(false);
+    // Don't change isInstalled or canInstall - just stop the installation process
   };
 
   const resetInstallation = () => {
@@ -154,6 +160,7 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
     deferredPrompt,
     startInstallation,
     completeInstallation,
+    cancelInstallation,
     resetInstallation
   };
 
