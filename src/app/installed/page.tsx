@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { pwaLauncher, PWALaunchResult } from '@/utils/pwaLauncher';
 
 export default function InstalledPage() {
   const router = useRouter();
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [launchStatus, setLaunchStatus] = useState<string>('');
 
   useEffect(() => {
     // Show confetti animation
@@ -18,13 +21,54 @@ export default function InstalledPage() {
     }
   }, []);
 
-  const handleOpenApp = () => {
-    // In a real PWA, this would open the installed app
-    router.push('/');
-  };
+  const handleOpenApp = async () => {
+    setIsLaunching(true);
+    setLaunchStatus('Meluncurkan aplikasi...');
 
-  const handleBackToStore = () => {
-    router.push('/');
+    try {
+      // Use advanced PWA launcher
+      const result: PWALaunchResult = await pwaLauncher.launchPWA();
+      
+      if (result.success) {
+        setLaunchStatus(`✅ ${result.message}`);
+        console.log(`PWA launched successfully via ${result.method}`);
+        
+        // If launched successfully and not already in PWA mode
+        if (result.method !== 'already_in_pwa') {
+          // Give user feedback and close/redirect after delay
+          setTimeout(() => {
+            if (window.opener) {
+              window.close();
+            } else {
+              router.push('/');
+            }
+          }, 2000);
+        } else {
+          // Already in PWA, just redirect to home
+          setTimeout(() => {
+            router.push('/');
+          }, 1000);
+        }
+      } else {
+        setLaunchStatus(`⚠️ ${result.message}`);
+        console.warn(`PWA launch failed: ${result.message}`);
+        
+        // Fallback after showing error
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      }
+    } catch (error) {
+      setLaunchStatus('❌ Gagal meluncurkan aplikasi');
+      console.error('Error launching PWA:', error);
+      
+      // Fallback to home page
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+    } finally {
+      setIsLaunching(false);
+    }
   };
 
   return (
@@ -110,20 +154,32 @@ export default function InstalledPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Launch Status */}
+        {launchStatus && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 text-center">{launchStatus}</p>
+          </div>
+        )}
+
+        {/* Action Button */}
         <div className="space-y-3">
           <button
             onClick={handleOpenApp}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            disabled={isLaunching}
+            className={`w-full font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg ${
+              isLaunching
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-xl transform hover:scale-105'
+            }`}
           >
-            🚀 Buka Aplikasi
-          </button>
-          
-          <button
-            onClick={handleBackToStore}
-            className="w-full bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-xl hover:bg-gray-200 transition-colors duration-200"
-          >
-            Kembali ke Store
+            {isLaunching ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Meluncurkan...</span>
+              </div>
+            ) : (
+              '🚀 Buka Aplikasi'
+            )}
           </button>
         </div>
 
