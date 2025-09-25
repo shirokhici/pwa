@@ -7,11 +7,10 @@ interface InstallContextType {
   isInstalling: boolean;
   installDate: string | null;
   canInstall: boolean;
-  deferredPrompt: any;
-  setDeferredPrompt: (prompt: any) => void;
+  deferredPrompt: BeforeInstallPromptEvent | null;
   startInstallation: () => void;
   completeInstallation: () => void;
-  checkInstallationStatus: () => void;
+  resetInstallation: () => void;
 }
 
 const InstallContext = createContext<InstallContextType | undefined>(undefined);
@@ -75,6 +74,17 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
     }
   };
 
+  const resetInstallation = () => {
+    setIsInstalling(false);
+    setIsInstalled(false);
+    setInstallDate(null);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('pwa_installed');
+      localStorage.removeItem('pwa_install_date');
+    }
+  };
+
   useEffect(() => {
     checkInstallationStatus();
 
@@ -119,10 +129,9 @@ export const InstallProvider: React.FC<InstallProviderProps> = ({ children }) =>
     installDate,
     canInstall,
     deferredPrompt,
-    setDeferredPrompt,
     startInstallation,
     completeInstallation,
-    checkInstallationStatus
+    resetInstallation
   };
 
   return (

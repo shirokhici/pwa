@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useInstall } from '@/contexts/InstallContext';
 
 export default function InstallingPage() {
   const router = useRouter();
+  const { completeInstallation, resetInstallation } = useInstall();
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCancelled, setIsCancelled] = useState(false);
 
   const installationSteps = [
     'Mempersiapkan instalasi...',
@@ -17,13 +20,21 @@ export default function InstallingPage() {
   ];
 
   useEffect(() => {
+    if (isCancelled) return;
+    
     const timer = setInterval(() => {
       setProgress(prev => {
+        if (isCancelled) {
+          clearInterval(timer);
+          return prev;
+        }
         if (prev >= 100) {
           clearInterval(timer);
           // Redirect to success page after installation completes
           setTimeout(() => {
-            router.push('/installed');
+            if (!isCancelled) {
+              router.push('/installed');
+            }
           }, 1000);
           return 100;
         }
@@ -32,11 +43,17 @@ export default function InstallingPage() {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [router]);
+  }, [router, isCancelled]);
 
   useEffect(() => {
+    if (isCancelled) return;
+    
     const stepTimer = setInterval(() => {
       setCurrentStep(prev => {
+        if (isCancelled) {
+          clearInterval(stepTimer);
+          return prev;
+        }
         if (prev < installationSteps.length - 1) {
           return prev + 1;
         }
@@ -46,7 +63,7 @@ export default function InstallingPage() {
     }, 2000);
 
     return () => clearInterval(stepTimer);
-  }, []);
+  }, [isCancelled]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -129,7 +146,12 @@ export default function InstallingPage() {
 
         {/* Cancel Button */}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => {
+            setIsCancelled(true);
+            // Reset installation state using context
+            resetInstallation();
+            router.push('/');
+          }}
           className="mt-8 text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
           Batalkan Instalasi
